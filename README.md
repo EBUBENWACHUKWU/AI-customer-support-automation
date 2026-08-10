@@ -1,3 +1,5 @@
+# AI Customer Support Automation
+
 ## Project Overview
 
 AI Customer Support Automation is an AI-powered customer support workflow built with n8n.
@@ -6,7 +8,6 @@ The automation receives customer support emails, analyzes the customer's request
 
 The goal of this project is to reduce repetitive customer-support processing and demonstrate how AI can be integrated into an automated business workflow.
 
-
 ## Problem Statement
 
 Customer support teams often spend significant time reading incoming emails, identifying the customer's request, determining its priority, deciding which department should handle it, and recording the request manually.
@@ -14,7 +15,6 @@ Customer support teams often spend significant time reading incoming emails, ide
 This process can be repetitive, time-consuming, and prone to inconsistent categorization.
 
 This project addresses the problem by automatically analyzing incoming customer emails and converting them into structured support tickets.
-
 
 ## Project Goal
 
@@ -29,7 +29,7 @@ The goal of this project was to build an automated customer-support system that 
 - Route the request based on its intent
 - Store the resulting support ticket in Google Sheets
 
-- ## Technologies Used
+## Technologies Used
 
 | Technology | Purpose |
 |---|---|
@@ -38,7 +38,6 @@ The goal of this project was to build an automated customer-support system that 
 | **Email (IMAP)** | Receiving customer support emails |
 | **Google Sheets** | Storing and managing support tickets |
 | **JSON** | Structured data exchange between workflow nodes |
-
 
 ## Supported Customer Intents
 
@@ -55,6 +54,7 @@ The AI classifier currently supports six customer-support intents:
 
 The automation follows this general process:
 
+```text
 Customer Email
 ↓
 Email Trigger (IMAP)
@@ -74,7 +74,7 @@ Prepare Sheet Row
 Log Support Ticket
 ↓
 Google Sheets
-
+```
 
 ### Workflow Overview
 
@@ -86,9 +86,8 @@ Google Sheets
 6. **Intent-Specific Processing** prepares the appropriate information for the selected support path.
 7. **Prepare Sheet Row** organizes the information into a consistent support-ticket format.
 8. **Log Support Ticket** sends the structured ticket to Google Sheets.
-9. 
 
-10. ## AI Classification Process
+## AI Classification Process
 
 The AI analyzes each incoming customer message and converts the unstructured email into structured support information.
 
@@ -114,7 +113,7 @@ Example:
   "priority": "medium",
   "reply": "I can help you with that. Could you please provide more details about the item you need to replace and the reason for the replacement request?"
 }
-
+```
 
 ### Intent Routing
 
@@ -130,7 +129,6 @@ The workflow currently supports the following routes:
 - `other` → General support
 
 This allows different types of customer requests to be processed automatically without requiring a support agent to manually categorize every incoming email.
-
 
 ## Support Ticket Logging
 
@@ -158,6 +156,33 @@ This creates a structured record of each customer-support request and provides a
 | AI Reply | I can help you with that. Could you please provide more details about the item you need to replace? |
 | Date | 2026-08-10 |
 
+## Testing
+
+The workflow was tested using different customer-support scenarios to verify that the AI correctly identified customer intent and that the resulting information was successfully logged in Google Sheets.
+
+### Replacement Test
+
+**Customer message:**
+
+> My shoes arrived damaged and I would like a replacement.
+
+**Result:**
+
+- Intent: `replacement`
+- Category: `Returns & Exchanges`
+- Priority: `high`
+- Support ticket successfully logged in Google Sheets.
+
+### Refund Test
+
+**Customer message:**
+
+> I am not satisfied with my order and I would like a refund.
+
+**Result:**
+
+- Intent: `refund`
+- Support ticket successfully logged in Google Sheets.
 
 ## 📊 Results
 
@@ -174,7 +199,6 @@ The automation successfully:
 - Routes requests based on intent
 - Logs structured support tickets in Google Sheets
 
-
 ## 🧠 What I Learned
 
 Through this project, I learned how to:
@@ -188,7 +212,6 @@ Through this project, I learned how to:
 - Debug workflow execution errors
 - Test and validate an end-to-end automation
 
-
 ## 🚀 Future Improvements
 
 Possible improvements include:
@@ -200,8 +223,6 @@ Possible improvements include:
 - Connecting the workflow to a CRM
 - Adding more customer-support intents
 - Adding automated customer follow-ups
-
-
 
 ## 🖼️ Workflow Screenshots
 
@@ -217,10 +238,9 @@ Example of a support ticket generated and logged automatically.
 
 ![Google Sheets Support Ticket](screenshots/google-sheets-ticket.png)
 
-
-
 ## 📁 Project Files
 
-- `README.md` — Project documentation
-- `workflow/` — Exported n8n workflow
-- `screenshots/` — Screenshots of the workflow and generated support tickets
+- [`README.md`](README.md) — Project documentation
+- [`customer-support-automation.json`](workflow/customer-support-automation.json) — Exported n8n workflow
+- [`workflow.png`](screenshots/workflow.png) — Complete n8n workflow screenshot
+- [`google-sheets-ticket.png`](screenshots/google-sheets-ticket.png) — Example of a generated support ticket
