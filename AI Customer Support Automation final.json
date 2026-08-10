@@ -1,0 +1,574 @@
+{
+  "name": "AI Customer Support Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -144
+      ],
+      "id": "cf611b48-08b2-4770-8afc-79a4ab6c1c44",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        240
+      ],
+      "id": "35789fa0-f3ee-4299-ab88-e1d287428eee",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "Ko6evi3I9NEMSKPX",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        0,
+        352
+      ],
+      "id": "792e9251-c011-47d5-a2ee-c516cf6cc160",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "Ko6evi3I9NEMSKPX",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"Returns & Exchanges\",\n  \"intent\": \"refund\",\n  \"priority\": \"medium\",\n  \"reply\": \"I understand you'd like to return your item. Please provide your order number.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        352
+      ],
+      "id": "195fa1ba-9b15-45cc-890a-5a196c4089d1",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-support",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        144
+      ],
+      "id": "364b2486-c7b2-48bf-b5ad-7322bc1d6ac1",
+      "name": "Customer Message Webhook",
+      "webhookId": "3b3c8065-a5fb-4446-8ec1-b7c64fe3d21c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "da4b2cb4-02f6-482e-bdb8-57c70ad6ff71",
+              "name": "customerName",
+              "value": "Ebube Allen",
+              "type": "string"
+            },
+            {
+              "id": "a0f9b083-8a05-48d9-b228-c090e3867c12",
+              "name": "orderNumber",
+              "value": 4532,
+              "type": "number"
+            },
+            {
+              "id": "d08d3e84-7653-486e-a05e-6c5813d66819",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        144
+      ],
+      "id": "c8fcfc2c-1573-444e-9930-18889f8b474d",
+      "name": "Prepare Customer Message"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a customer support classifier.\n\nAnalyze the customer's message carefully and determine the correct category, intent, priority, and reply.\n\nThe customer's message is provided in the input field:\n{{ $json.message }}\n\nClassify the message into exactly one of these intents:\n\n- replacement: The customer wants a replacement for a damaged, defective, wrong, or faulty item.\n- refund: The customer wants their money back.\n- return: The customer wants to return an item.\n- track_order: The customer wants to know where their order is.\n- incorrect_charge: The customer says they were charged incorrectly.\n- other: Anything that doesn't fit the categories above.\n\nChoose the intent based ONLY on the customer's actual message.\n\nUse these categories:\n\n- Returns & Exchanges: replacement, refund, or return requests.\n- Shipping & Delivery: track_order requests.\n- Billing & Payment: incorrect_charge requests.\n- Other: other requests.\n\nExamples:\n\nIf the customer says:\n\"My shoes arrived damaged and I'd like a replacement.\"\n\nReturn:\nintent = \"replacement\"\ncategory = \"Returns & Exchanges\"\n\nIf the customer says:\n\"I'd like a refund because the shoes don't fit.\"\n\nReturn:\nintent = \"refund\"\ncategory = \"Returns & Exchanges\"\n\nIf the customer says:\n\"I want to send these shoes back.\"\n\nReturn:\nintent = \"return\"\ncategory = \"Returns & Exchanges\"\n\nIf the customer says:\n\"Where is my order?\"\n\nReturn:\nintent = \"track_order\"\ncategory = \"Shipping & Delivery\"\n\nIf the customer says:\n\"I was charged twice.\"\n\nReturn:\nintent = \"incorrect_charge\"\ncategory = \"Billing & Payment\"\n\nSet priority based on the situation.\n\nUse \"high\" for damaged, defective, urgent, or serious problems.\nUse \"medium\" for normal customer requests.\nUse \"low\" for minor or non-urgent requests.\n\nWrite a helpful customer-service reply that matches the customer's actual request.\n\nReturn ONLY valid JSON using exactly this structure:\n\n{\n  \"category\": \"the appropriate category\",\n  \"intent\": \"the appropriate intent\",\n  \"priority\": \"high, medium, or low\",\n  \"reply\": \"a helpful response to the customer\"\n}\n\nDo not include markdown.\nDo not include ```json.\nDo not add explanations.\nReturn only the JSON object.\n\nAlso include the original customer message in the output as \"customerMessage\".",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        144,
+        144
+      ],
+      "id": "47b41d44-d20b-4935-ade3-40462517e7e3",
+      "name": "AI Support Classifier"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = JSON.parse($json.output);\n\nreturn [\n  {\n    json: data\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        288
+      ],
+      "id": "3cb05c28-b3b0-471b-86ec-25eaa46a4e45",
+      "name": "Parse AI Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d8a154be-8006-4c1c-ac59-e0c3038190d0",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "replacement",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d33a4b2c-74e3-4f93-9ca8-efb8dea3c0aa",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "={{ $json.intent }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        144
+      ],
+      "id": "53c8978f-4e8c-4179-a2b3-a6a172f44830",
+      "name": "Route by Intent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e698947-67ec-4eb2-8cc7-943c3942c0cd",
+              "name": "status",
+              "value": "Replacement request detected. Ticket created successfully.",
+              "type": "string"
+            },
+            {
+              "id": "bad589b6-cb43-4c3d-a641-54261336ecaa",
+              "name": "department",
+              "value": "Returns Team",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        128
+      ],
+      "id": "230dc911-fb0b-48f3-888a-83e6fe54c8a0",
+      "name": "Replacement Ticket Details"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2dc7c6f0-611b-4557-be83-d602d555f9a5",
+              "name": "status",
+              "value": "Replacement request detected. Ticket created successfully.",
+              "type": "string"
+            },
+            {
+              "id": "e4e2c11c-331b-4b32-96c5-75fe8109ad40",
+              "name": "department",
+              "value": "Returns Team",
+              "type": "string"
+            },
+            {
+              "id": "403b9f3d-9ad8-4edb-93f1-3dc718ae2079",
+              "name": "customerMessage",
+              "value": "={{ $json.customerMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "1231e2ba-f6aa-4f9a-bdb9-385e103bc37d",
+              "name": "Date",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "51d00a7e-6fce-4b4a-b315-c434c55afdcf",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "eecbad48-22dc-4bb5-ae7e-39f07f235ad4",
+              "name": "intent",
+              "value": "={{ $json.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "47c02475-1ec9-4dea-acde-6c347b214098",
+              "name": "priority",
+              "value": "={{ $json.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "5b2148dc-9326-4800-9768-fb143b028a6f",
+              "name": "reply",
+              "value": "={{ $json.reply }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1008,
+        160
+      ],
+      "id": "4a699b4b-8212-4ee8-b2d0-983eeb2e597e",
+      "name": "Prepare Sheet Row"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1bFr_Yn0G74f6RzN4PZ-H0-XZ2tCdoeRv69inGG1K91Y",
+          "mode": "list",
+          "cachedResultName": "AI Customer Support Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bFr_Yn0G74f6RzN4PZ-H0-XZ2tCdoeRv69inGG1K91Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bFr_Yn0G74f6RzN4PZ-H0-XZ2tCdoeRv69inGG1K91Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer Message": "={{ $('Prepare Sheet Row').item.json.customerMessage }}",
+            "Category": "={{ $('Prepare Sheet Row').item.json.category }}",
+            "Intent": "={{ $('Prepare Sheet Row').item.json.intent }}",
+            "Priority": "={{ $('Prepare Sheet Row').item.json.priority }}",
+            "AI Reply": "={{ $('Prepare Sheet Row').item.json.reply }}",
+            "Date": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Customer Message",
+              "displayName": "Customer Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent",
+              "displayName": "Intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Reply",
+              "displayName": "AI Reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1296,
+        160
+      ],
+      "id": "6342e600-a9e0-4c5d-bcf0-2a760a14cfd8",
+      "name": "Log Support Ticket",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qfzgFv8Ly20vvrI5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -144
+      ],
+      "id": "77858345-067a-40ec-9f6e-4e2c4ef1b759",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "6L2TQkerAjv0xDUW",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "025c4a0f-a3c0-4264-8d5d-6e8d5b9e4c56",
+              "name": "message",
+              "value": "={{ $json.textPlain }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1088,
+        -160
+      ],
+      "id": "424c256c-a0b3-4db1-8515-2ec5504b0a30",
+      "name": "Prepare Gmail Message"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Support Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Message Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Customer Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Customer Message": {
+      "main": [
+        [
+          {
+            "node": "AI Support Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Support Classifier": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Route by Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Intent": {
+      "main": [
+        [
+          {
+            "node": "Replacement Ticket Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replacement Ticket Details": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet Row": {
+      "main": [
+        [
+          {
+            "node": "Log Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Gmail Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gmail Message": {
+      "main": [
+        [
+          {
+            "node": "AI Support Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ae262e0e-1678-4f52-8de2-f37e8bc726d3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c97443191be770d747480364798fa4497351371ff52b21d6be9300582b6c7ef"
+  },
+  "id": "zqjsznkgH27hKueE",
+  "tags": []
+}
